@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import darkLogo from './img/dark.png'
 import lightLogo from './img/light.png'
+import GraficoHistorial from './components/GraficoHistorial'
 
 type SensorData = {
   temperatura: number | null
@@ -117,6 +118,7 @@ function App() {
       </div>
 
       <section className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex w-full flex-col w-full">
         <div className="grid w-full gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="glass-card relative overflow-hidden rounded-[2rem] p-6 sm:p-8">
             <div className="absolute right-6 top-6 h-3 w-3 rounded-full bg-green-400 pulse-dot" />
@@ -222,6 +224,8 @@ function App() {
               </div>
             </div>
           </aside>
+        </div>
+        <GraficoHistorial isDarkTheme={isDarkTheme} />
         </div>
       </section>
 
