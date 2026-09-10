@@ -10,7 +10,7 @@ type SensorData = {
 }
 
 //const API_URL = 'http://192.168.100.227:3000/api/sensor'
-const API_URL = 'https://0hnt14s9-3000.brs.devtunnels.ms/api/sensor'
+const API_URL = await fetch('https://termosync-backend-production.up.railway.app/api/sensor/historial');
 
 const initialState: SensorData = {
   temperatura: null,
