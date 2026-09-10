@@ -1,23 +1,22 @@
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-export default function GraficoHistorial({ isDarkTheme }) {
-  const [datos, setDatos] = useState([]);
+import type { GraficoHistorialProps, SensorHistoryItem } from '../types/index.ts';
+export default function GraficoHistorial({ isDarkTheme }: GraficoHistorialProps) {
+  const [datos, setDatos] = useState<SensorHistoryItem[]>([]);
   const [periodo, setPeriodo] = useState('semana'); // Inicia en 7 días por defecto
 
   useEffect(() => {
     const obtenerHistorial = async () => {
       try {
-        // Reutilizamos tu variable de entorno y cambiamos "/actual" por "/historial"
         const baseUrl = import.meta.env.VITE_API_URL.replace('/actual', '/historial');
         const respuesta = await fetch(`${baseUrl}?periodo=${periodo}`);
         
         if (!respuesta.ok) throw new Error('Error al obtener historial');
         
-        const data = await respuesta.json();
+        const data: SensorHistoryItem[] = await respuesta.json();
 
         // Formatear fecha para el eje X
-        const datosFormateados = data.map(item => {
+        const datosFormateados = data.map((item: SensorHistoryItem) => {
           const fecha = new Date(item.timestamp);
           return {
             ...item,
@@ -32,12 +31,11 @@ export default function GraficoHistorial({ isDarkTheme }) {
     };
 
     obtenerHistorial();
-    // Se actualiza cada 5 minutos (300000 ms) para no saturar la base de datos
     const intervalo = setInterval(obtenerHistorial, 300000); 
     return () => clearInterval(intervalo);
   }, [periodo]);
 
-  const textColor = isDarkTheme ? '#cbd5e1' : '#475569'; // slate-300 o slate-600
+  const textColor = isDarkTheme ? '#cbd5e1' : '#475569';
   const gridColor = isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
   return (
@@ -48,7 +46,6 @@ export default function GraficoHistorial({ isDarkTheme }) {
           <h2 className="mt-2 text-2xl font-semibold text-white">Análisis de Tendencias</h2>
         </div>
         
-        {/* Botones de control de periodo */}
         <div className="flex gap-2 rounded-full border border-white/10 bg-black/20 p-1">
           <button 
             onClick={() => setPeriodo('semana')}
