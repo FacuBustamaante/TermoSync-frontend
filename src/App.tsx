@@ -10,7 +10,7 @@ type SensorData = {
 }
 
 //const API_URL = 'http://192.168.100.227:3000/api/sensor'
-const API_URL = await fetch('https://termosync-backend-production.up.railway.app/api/sensor/historial');
+const API_URL = import.meta.env.VITE_API_URL;
 
 const initialState: SensorData = {
   temperatura: null,
