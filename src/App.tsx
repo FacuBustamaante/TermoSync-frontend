@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import darkLogo from './img/dark.png'
 import lightLogo from './img/light.png'
