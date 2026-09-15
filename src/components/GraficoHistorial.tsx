@@ -1,91 +1,146 @@
-import { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { GraficoHistorialProps, SensorHistoryItem } from '../types/index.ts';
-export default function GraficoHistorial({ isDarkTheme }: GraficoHistorialProps) {
-  const [datos, setDatos] = useState<SensorHistoryItem[]>([]);
-  const [periodo, setPeriodo] = useState('semana'); // Inicia en 7 días por defecto
+import { useEffect, useState } from 'react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
+// 1. Tipos de datos que recibe y procesa el componente
+interface GraficoHistorialProps {
+  isDarkTheme: boolean;
+  selectedBranch: string;
+  period: string;
+}
+
+interface SensorReading {
+  address: string;
+  temp: number;
+}
+
+interface RawHistoryData {
+  timestamp: string;
+  readings: SensorReading[];
+}
+
+interface ChartData {
+  time: string;
+  [macAddress: string]: string | number; // Permite llaves dinámicas para múltiples sensores
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://termosync-backend-production.up.railway.app';
+
+export default function GraficoHistorial({ isDarkTheme, selectedBranch, period }: GraficoHistorialProps) {
+  const [historyData, setHistoryData] = useState<ChartData[]>([]);
+  const [uniqueSensors, setUniqueSensors] = useState<string[]>([]);
+
+  // 2. Fetch de datos cada vez que cambia la sucursal o el período
   useEffect(() => {
-    const obtenerHistorial = async () => {
-      try {
-        const baseUrl = import.meta.env.VITE_API_URL.replace('/actual', '/historial');
-        const respuesta = await fetch(`${baseUrl}?periodo=${periodo}`);
-        
-        if (!respuesta.ok) throw new Error('Error al obtener historial');
-        
-        const data: SensorHistoryItem[] = await respuesta.json();
+    if (!selectedBranch) return;
 
-        // Formatear fecha para el eje X
-        const datosFormateados = data.map((item: SensorHistoryItem) => {
-          const fecha = new Date(item.timestamp);
-          return {
-            ...item,
-            fechaVisible: fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    fetch(`${API_URL}/api/telemetry/historial?branchId=${selectedBranch}&periodo=${period}`)
+      .then(res => res.json())
+      .then((data: RawHistoryData[]) => {
+        const formattedData: ChartData[] = [];
+        const sensorsFound = new Set<string>();
+
+        data.forEach(entry => {
+          // Formateamos la hora
+          const row: ChartData = {
+            time: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
+
+          // Recorremos el array interno de sensores
+          entry.readings.forEach(sensor => {
+            row[sensor.address] = sensor.temp;
+            sensorsFound.add(sensor.address);
+          });
+
+          formattedData.push(row);
         });
 
-        setDatos(datosFormateados);
-      } catch (error) {
-        console.error("Error cargando el gráfico:", error);
-      }
-    };
+        setHistoryData(formattedData);
+        setUniqueSensors(Array.from(sensorsFound));
+      })
+      .catch(err => console.error("Error cargando historial:", err));
+  }, [selectedBranch, period]);
 
-    obtenerHistorial();
-    const intervalo = setInterval(obtenerHistorial, 300000); 
-    return () => clearInterval(intervalo);
-  }, [periodo]);
+  // Paleta de colores para las líneas (soportando hasta 6 sensores)
+  const colors = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "#ec4899"];
 
-  const textColor = isDarkTheme ? '#cbd5e1' : '#475569';
-  const gridColor = isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  // 3. Estilos dinámicos adaptados al Tema Claro / Oscuro de tu App
+  const textColor = isDarkTheme ? '#cbd5e1' : '#64748b'; // slate-300 o slate-500
+  const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  const tooltipBg = isDarkTheme ? '#020617' : '#ffffff'; // black/slate-950 o blanco
 
   return (
-    <div className="glass-card mt-8 rounded-[2rem] p-6 sm:p-8">
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Historial</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">Análisis de Tendencias</h2>
-        </div>
-        
-        <div className="flex gap-2 rounded-full border border-white/10 bg-black/20 p-1">
-          <button 
-            onClick={() => setPeriodo('semana')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${periodo === 'semana' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            7 Días
-          </button>
-          <button 
-            onClick={() => setPeriodo('mes')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${periodo === 'mes' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Último Mes
-          </button>
-        </div>
+    <div className="glass-card mt-6 w-full rounded-[2rem] p-6 sm:p-8">
+      <div className="mb-6">
+        <h2 className={`text-xl font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+          Historial de Temperaturas
+        </h2>
+        <p className="text-sm text-slate-400">
+          Evolución térmica de los sensores en el período seleccionado.
+        </p>
       </div>
+      
+      <div className="h-[400px] w-full">
+        {historyData.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-slate-400">
+            Esperando datos para graficar...
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={historyData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+              
+              <XAxis 
+                dataKey="time" 
+                stroke={textColor} 
+                fontSize={12} 
+                tickLine={false}
+                axisLine={false}
+              />
+              
+              <YAxis 
+                stroke={textColor} 
+                fontSize={12} 
+                unit="°C" 
+                tickLine={false}
+                axisLine={false}
+              />
+              
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: tooltipBg,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '1rem',
+                  color: isDarkTheme ? '#fff' : '#000'
+                }}
+              />
+              
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
-      <div style={{ width: '100%', height: 350 }}>
-        <ResponsiveContainer>
-          <AreaChart data={datos} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="colorHum" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-            <XAxis dataKey="fechaVisible" stroke={textColor} fontSize={12} tickMargin={10} minTickGap={30} />
-            <YAxis stroke={textColor} fontSize={12} tickFormatter={(val) => `${val}`} />
-            <Tooltip 
-              contentStyle={{ backgroundColor: isDarkTheme ? '#0f172a' : '#ffffff', borderRadius: '12px', border: 'none', color: isDarkTheme ? '#fff' : '#000' }}
-            />
-            <Legend verticalAlign="top" height={36} />
-            <Area type="monotone" dataKey="temperatura" name="Temp (°C)" stroke="#3b82f6" fillOpacity={1} fill="url(#colorTemp)" />
-            <Area type="monotone" dataKey="humedad" name="Humedad (%)" stroke="#10b981" fillOpacity={1} fill="url(#colorHum)" />
-          </AreaChart>
-        </ResponsiveContainer>
+              {/* Dibuja automáticamente una línea por cada MAC encontrada en la base de datos */}
+              {uniqueSensors.map((mac, index) => (
+                <Line
+                  key={mac}
+                  type="monotone"
+                  dataKey={mac}
+                  name={`Sensor ${mac.slice(-4)}`} // Muestra solo los 4 últimos dígitos de la MAC para que la leyenda sea legible
+                  stroke={colors[index % colors.length]}
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
