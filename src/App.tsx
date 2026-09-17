@@ -3,6 +3,7 @@ import './App.css'
 import darkLogo from './img/dark.png'
 import lightLogo from './img/light.png'
 import GraficoHistorial from './components/GraficoHistorial'
+import VisualizadorHeladeras from './components/VisualizadorHeladeras'
 
 // 1. Nuevas Interfaces para tipar la arquitectura multisensores
 interface Branch {
@@ -10,25 +11,12 @@ interface Branch {
   name: string;
 }
 
-interface SensorReading {
+export interface SensorReading {
   address: string;
   temp: number;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://termosync-backend-production.up.railway.app';
-
-function formatTemperature(value: number | null) {
-  return value === null ? '--' : `${value.toFixed(1)} °C`
-}
-
-// 2. Nueva función para evaluar el estado de CADA sensor dinámicamente
-function getTemperatureStatus(temp: number | null) {
-  if (temp === null) return { label: 'Sin lectura', tone: 'text-slate-300' };
-  if (temp >= 8) return { label: 'Alerta: Calor', tone: 'text-red-400' };
-  if (temp >= 4) return { label: 'Calor alto', tone: 'text-orange-300' };
-  if (temp >= 0) return { label: 'Temperatura estable', tone: 'text-blue-300' };
-  return { label: 'Ambiente fresco', tone: 'text-slate-200' };
-}
 
 function App() {
   // Estados para temas y status de red
@@ -40,7 +28,6 @@ function App() {
   // Nuevos estados para sucursales, filtros y sensores
   const [branches, setBranches] = useState<Branch[]>([])
   const [selectedBranch, setSelectedBranch] = useState<string>('')
-  const [period, setPeriod] = useState<string>('dia')
   const [currentReadings, setCurrentReadings] = useState<SensorReading[]>([])
 
   // Cargar lista de sucursales al montar la app
@@ -132,7 +119,7 @@ function App() {
                     Panel ambiental
                   </p>
                   <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                    TempSync Al Fuego
+                    ThermalSync Al Fuego
                   </h1>
                   <p className="max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
                     Monitoreo en tiempo real de las temperaturas de múltiples heladeras mediante sensores sumergibles DS18B20, con actualización automática cada 5 segundos y gestión multicámara.
@@ -157,50 +144,11 @@ function App() {
                       ))}
                     </select>
                   </div>
-                  
-                  <div className="flex-1 rounded-[1.25rem] border border-white/10 bg-slate-950/40 p-4">
-                    <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-400 mb-2">
-                      Período de Gráfico
-                    </label>
-                    <select 
-                      className="w-full bg-transparent text-white border-b border-white/10 pb-1 text-sm focus:outline-none focus:border-blue-400"
-                      value={period}
-                      onChange={(e) => setPeriod(e.target.value)}
-                    >
-                      <option value="dia" className="text-black">Últimas 24 horas</option>
-                      <option value="semana" className="text-black">Última Semana</option>
-                      <option value="mes" className="text-black">Último Mes</option>
-                    </select>
-                  </div>
                 </div>
 
                 {/* NUEVO: Grilla dinámica de Sensores */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {currentReadings.length === 0 ? (
-                     <div className="col-span-full rounded-[1.75rem] border border-white/10 p-5 text-center text-slate-400">
-                       No hay sensores reportando para esta sucursal.
-                     </div>
-                  ) : (
-                    currentReadings.map((sensor, index) => {
-                      const status = getTemperatureStatus(sensor.temp);
-                      return (
-                        <article key={sensor.address} className="glass-card rounded-[1.75rem] border border-white/10 p-5">
-                          <div className="flex items-center justify-between gap-4 text-sm text-slate-400">
-                            <span className="truncate" title={sensor.address}>Sensor {index + 1}</span>
-                            <span className={status.tone}>{status.label}</span>
-                          </div>
-                          <div className="mt-5 flex items-end justify-between gap-4">
-                            <p className="shrink-0 whitespace-nowrap text-5xl font-semibold leading-none tracking-tight text-white sm:text-6xl">
-                              {formatTemperature(sensor.temp)}
-                            </p>
-                            <span className="rounded-full border border-blue-400/20 bg-blue-500 px-3 py-1 text-xs font-bold text-white">
-                              DS18B20
-                            </span>
-                          </div>
-                        </article>
-                      )
-                    })
-                  )}
+                <div className='mt-6'>
+                      <VisualizadorHeladeras readings={currentReadings} isDarkTheme={isDarkTheme} />
                 </div>
               </div>
             </div>
@@ -243,7 +191,6 @@ function App() {
           <GraficoHistorial 
             isDarkTheme={isDarkTheme} 
             selectedBranch={selectedBranch} 
-            period={period} 
           />
         </div>
       </section>

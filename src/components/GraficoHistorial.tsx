@@ -14,7 +14,6 @@ import {
 interface GraficoHistorialProps {
   isDarkTheme: boolean;
   selectedBranch: string;
-  period: string;
 }
 
 interface SensorReading {
@@ -34,9 +33,10 @@ interface ChartData {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://termosync-backend-production.up.railway.app';
 
-export default function GraficoHistorial({ isDarkTheme, selectedBranch, period }: GraficoHistorialProps) {
+export default function GraficoHistorial({ isDarkTheme, selectedBranch }: GraficoHistorialProps) {
   const [historyData, setHistoryData] = useState<ChartData[]>([]);
   const [uniqueSensors, setUniqueSensors] = useState<string[]>([]);
+  const [period, setPeriod] = useState<string>('dia');
 
   // 2. Fetch de datos cada vez que cambia la sucursal o el período
   useEffect(() => {
@@ -79,15 +79,30 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch, period }
 
   return (
     <div className="glass-card mt-6 w-full rounded-[2rem] p-6 sm:p-8">
-      <div className="mb-6">
-        <h2 className={`text-xl font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
-          Historial de Temperaturas
-        </h2>
-        <p className="text-sm text-slate-400">
-          Evolución térmica de los sensores en el período seleccionado.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+         <div>
+            <h2 className={`text-xl font-semibold ${isDarkTheme ? 'text-white' : 'text-slate-900'}`}>
+               Historial de Temperaturas
+            </h2>
+            <p className="text-sm text-slate-400">
+               Evolución térmica de los sensores en el período seleccionado.
+            </p>
+        </div>
+      <div className={`shrink-0 rounded-[1rem] border p-2 ${isDarkTheme ? 'border-white/10 bg-slate-900/50' : 'border-slate-200 bg-white/50'}`} >
+         <label className="block text-[10px] font-medium uppercase tracking-[0.2rem] text-slate-400 mb-1 px-1 ">
+            Período de gráfico
+         </label>
+         <select
+            className={`w-full bg-transparent text-sm font-medium focus:outline-none cursor-pointer ${isDarkTheme} ? 'text-white' : 'text-slate-800'`}
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+         >
+            <option value="dia" className='text-black'>Últimas 24 horas</option>
+            <option value="semana" className='text-black'>Última semana</option>
+            <option value="mes" className='text-black'>Último mes</option>
+         </select>
       </div>
-      
+      </div>
       <div className="h-[400px] w-full">
         {historyData.length === 0 ? (
           <div className="flex h-full items-center justify-center text-slate-400">
