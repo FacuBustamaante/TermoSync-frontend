@@ -31,7 +31,6 @@ export default function VisualizadorHeladeras({ readings, isDarkTheme }: Visuali
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
          {readings.map((sensor, index) => {
             const status = getTemperatureStatus(sensor.temp);
-            const cardBg = isDarkTheme ? 'bg-slate-900/40' : 'bg-white/40';
 
             return (
                <article
