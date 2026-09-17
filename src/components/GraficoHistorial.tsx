@@ -70,7 +70,7 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
   }, [selectedBranch, period]);
 
   // Paleta de colores para las líneas (soportando hasta 6 sensores)
-  const colors = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "#ec4899"];
+  const colors = ["#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899"];
 
   // 3. Estilos dinámicos adaptados al Tema Claro / Oscuro de tu App
   const textColor = isDarkTheme ? '#cbd5e1' : '#64748b'; // slate-300 o slate-500
