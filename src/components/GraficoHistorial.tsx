@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -110,25 +110,24 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={historyData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+            <AreaChart data={historyData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+              
+              {/* DEFINICIÓN DE LOS GRADIENTES DIFUMINADOS */}
+              <defs>
+                {uniqueSensors.map((mac, index) => {
+                  const color = colors[index % colors.length];
+                  return (
+                    <linearGradient key={`gradient-${mac}`} id={`color-${mac}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={color} stopOpacity={0} />
+                    </linearGradient>
+                  );
+                })}
+              </defs>
+
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-              
-              <XAxis 
-                dataKey="time" 
-                stroke={textColor} 
-                fontSize={12} 
-                tickLine={false}
-                axisLine={false}
-              />
-              
-              <YAxis 
-                stroke={textColor} 
-                fontSize={12} 
-                unit="°C" 
-                tickLine={false}
-                axisLine={false}
-              />
-              
+              <XAxis dataKey="time" stroke={textColor} fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke={textColor} fontSize={12} unit="°C" tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{ 
                   backgroundColor: tooltipBg,
@@ -137,23 +136,24 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
                   color: isDarkTheme ? '#fff' : '#000'
                 }}
               />
-              
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
-
-              {/* Dibuja automáticamente una línea por cada MAC encontrada en la base de datos */}
+              
+              {/* LAS LÍNEAS AHORA SON ÁREAS CON RELLENO */}
               {uniqueSensors.map((mac, index) => (
-                <Line
+                <Area
                   key={mac}
                   type="monotone"
                   dataKey={mac}
-                  name={`Sensor ${mac.slice(-4)}`} // Muestra solo los 4 últimos dígitos de la MAC para que la leyenda sea legible
+                  name={`Sensor ${mac.slice(-4)}`}
                   stroke={colors[index % colors.length]}
                   strokeWidth={3}
+                  fillOpacity={1}
+                  fill={`url(#color-${mac})`} // Aplica el gradiente correspondiente
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
