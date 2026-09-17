@@ -126,7 +126,7 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
               </defs>
 
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-              <XAxis dataKey="time" stroke={textColor} fontSize={12} tickLine={false} axisLine={false} />
+              <XAxis dataKey="time" stroke={textColor} fontSize={12} tickLine={false} axisLine={false} minTickGap={40} />
               <YAxis stroke={textColor} fontSize={12} unit="°C" tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{ 
@@ -142,7 +142,7 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
               {uniqueSensors.map((mac, index) => (
                 <Area
                   key={mac}
-                  type="monotone"
+                  type="natural"
                   dataKey={mac}
                   name={`Sensor ${mac.slice(-4)}`}
                   stroke={colors[index % colors.length]}
@@ -151,6 +151,7 @@ export default function GraficoHistorial({ isDarkTheme, selectedBranch }: Grafic
                   fill={`url(#color-${mac})`} // Aplica el gradiente correspondiente
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 0 }}
+                  baseValue="dataMin"
                 />
               ))}
             </AreaChart>

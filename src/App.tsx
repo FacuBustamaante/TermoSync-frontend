@@ -122,7 +122,7 @@ function App() {
                     ThermalSync Al Fuego
                   </h1>
                   <p className="max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
-                    Monitoreo en tiempo real de las temperaturas de múltiples heladeras mediante sensores sumergibles DS18B20, con actualización automática cada 5 segundos y gestión multicámara.
+                    Monitoreo en tiempo real de las temperaturas de múltiples heladeras mediante sensores sumergibles DS18B20, con actualización automática cada 3 minutos y gestión multicámara.
                   </p>
                 </div>
 
